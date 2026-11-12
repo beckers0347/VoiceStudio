@@ -24,6 +24,13 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "--supervise"
 
     raise SystemExit(supervisor_main(sys.argv[1:]))
 
+# CPU-only branch: hide GPUs and size the native thread pools before torch,
+# CTranslate2 or ONNX Runtime load (they read these once), and before any
+# engine sidecar is spawned (children inherit the environment).
+from core.cpu_only import enforce as _enforce_cpu_only  # noqa: E402
+
+_enforce_cpu_only()
+
 # Rust clears CLOEXEC only for the backend exec. Re-arm PEP 446 immediately:
 # nested supervisors receive this descriptor solely through explicit pass_fds,
 # so a third-party close_fds=False child cannot hold the desktop drain barrier.

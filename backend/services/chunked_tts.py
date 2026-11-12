@@ -26,8 +26,24 @@ from typing import List
 
 logger = logging.getLogger("omnivoice.chunked_tts")
 
+def _default_max_chunk_chars() -> int:
+    """800 characters; 400 in the CPU-only branch's low-resource mode.
+
+    Peak inference RAM follows the longest chunk (attention is quadratic in
+    sequence length), not the total text, so a smaller chunk keeps memory low
+    and flat however long the script is."""
+    try:
+        from core import cpu_only
+
+        if cpu_only.enabled() and cpu_only.low_resource_mode():
+            return 400
+    except Exception:  # noqa: BLE001 - the chunker must work without the app
+        pass
+    return 800
+
+
 # Default chunk size in characters. 0 disables chunking entirely.
-DEFAULT_MAX_CHUNK_CHARS = 800
+DEFAULT_MAX_CHUNK_CHARS = _default_max_chunk_chars()
 
 # Default crossfade between chunks. 0 = hard cut.
 DEFAULT_CROSSFADE_MS = 50

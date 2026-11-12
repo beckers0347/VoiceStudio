@@ -449,6 +449,11 @@ if (singleInstance && !app.requestSingleInstanceLock()) {
       app.on('browser-window-created', (_event, window) => optimizer.watchWindowShortcuts(window));
       closeDirectoryScopes = restoreSecurityScopedDirectories();
 
+      // CPU-only branch: always install the CPU PyTorch build and pin the
+      // backend (and its engine sidecars) to the CPU. A value set for this
+      // launch wins over any saved choice.
+      process.env.OMNIVOICE_TORCH_VARIANT = 'cpu';
+      process.env.OMNIVOICE_DEVICE = 'cpu';
       applySavedTorchVariant();
       const backend = new BackendSupervisor();
       supervisor = backend;

@@ -740,7 +740,15 @@ def requested_device_override() -> str:
     choice (``compute_device`` in prefs.json) > ``"auto"``. Env wins so
     power-users can pin a device without the UI silently undoing it (same
     resolution order as engine selection, #981). Unknown values normalize to
-    ``"auto"`` — the probe must never raise."""
+    ``"auto"`` — the probe must never raise.
+
+    On the CPU-only branch the answer is always ``"cpu"`` (``core.cpu_only``),
+    so the probe below never touches a GPU runtime and every consumer of the
+    cached caps (routing, /health, the loader) inherits the pin."""
+    from core import cpu_only
+
+    if cpu_only.enabled():
+        return "cpu"
     try:
         from core import prefs
 

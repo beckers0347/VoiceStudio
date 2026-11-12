@@ -23,8 +23,11 @@ def _frozen_requirements(group, tmp_path):
     if uv is None:
         pytest.skip("uv required to validate its frozen dependency selection")
     args = [uv, "export", "--frozen", "--no-dev", "--no-hashes", "--no-emit-project"]
+    # The CPU-only branch defaults to the cpu group, so name both explicitly.
     if group == "cpu":
         args += ["--no-group", "cuda", "--group", "cpu"]
+    else:
+        args += ["--no-group", "cpu", "--group", "cuda"]
     result = subprocess.run(
         args, cwd=ROOT, text=True, capture_output=True, check=True, timeout=30,
         env={**os.environ, "UV_CACHE_DIR": str(tmp_path / "uv"), "UV_OFFLINE": "1"},

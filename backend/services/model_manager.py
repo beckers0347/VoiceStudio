@@ -26,6 +26,10 @@ def _lazy_torch():
     if _torch is None:
         import torch as _t
         _torch = _t
+        from core import cpu_only
+
+        if cpu_only.enabled():
+            cpu_only.configure_torch(_t)
     return _torch
 
 
@@ -2726,10 +2730,17 @@ def _load_model_sync():
         _preflight_truncated_weights(checkpoint)
 
         def _load():
-            return VoiceStudio.from_pretrained(
+            loaded = VoiceStudio.from_pretrained(
                 checkpoint, device_map=device,
                 dtype=getattr(torch, tts_dtype_name(device)), load_asr=False,
             )
+            from core import cpu_only
+
+            # Opt-in (OMNIVOICE_CPU_QUANTIZE=1): int8 Linear layers trade a
+            # little fidelity for a smaller, faster model on CPU.
+            if cpu_only.enabled() and cpu_only.quantization_requested():
+                loaded = cpu_only.quantize_dynamic(loaded)
+            return loaded
 
         def _recover_corrupt_weights(exc: BaseException):
             """Re-fetch weights that are on disk but unparseable (#1406).
@@ -3925,7 +3936,15 @@ def release_device_cache(*, device: str | None = None, raise_on_failure: bool = 
 
 
 def free_vram():
-    """Release cached GPU memory on any accelerator (CUDA, MPS, XPU, NPU)."""
+    """Release cached GPU memory on any accelerator (CUDA, MPS, XPU, NPU).
+
+    CPU-only branch: there is no device cache; collect garbage and return the
+    freed heap to the OS instead (``core.cpu_only.release_memory``)."""
+    from core import cpu_only
+
+    if cpu_only.enabled():
+        cpu_only.release_memory()
+        return
     torch = _lazy_torch()
     import gc
     gc.collect()

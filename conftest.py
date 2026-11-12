@@ -3,8 +3,15 @@
 Only fixtures that both suites need live here; each suite's own conftest.py
 still owns its import path and hermetic data dir.
 """
+import os
 import sys
 import types
+
+# CPU-only branch: the GPU routing code is kept dormant so the branch keeps
+# merging main, and its existing tests mock accelerators. They run with the
+# policy out of the way; tests/test_cpu_only_policy.py turns it back on. The
+# switch is ignored outside pytest (core.cpu_only.enabled).
+os.environ.setdefault("OMNIVOICE_TEST_ALLOW_GPU_PATHS", "1")
 
 import pytest
 

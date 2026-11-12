@@ -270,8 +270,8 @@ Documentation = "https://github.com/debpalash/VoiceStudio/tree/main/docs"
 "Upstream TTS Model" = "https://github.com/k2-fsa/OmniVoice"
 
 [tool.uv.sources]
-# Keep both compute variants in the lockfile. Source and packaged setup select
-# CPU when no NVIDIA driver is detected; plain `uv sync` preserves the CUDA default.
+# Both compute variants stay in the lockfile; this branch defaults to CPU
+# (see default-groups below).
 # macOS keeps the PyPI build (including MPS) regardless of the selected group.
 torch = [
   { index = "pypi", marker = "(sys_platform != 'linux' and sys_platform != 'win32') or ((platform_machine == 'aarch64' or platform_machine == 'arm64') and sys_platform == 'linux')" },
@@ -308,7 +308,10 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv]
-default-groups = ["dev", "cuda"]
+# CPU-only branch: plain `uv sync` installs the CPU PyTorch build (no NVIDIA
+# libraries). The cuda group stays defined so the lockfile keeps merging with
+# main; nothing on this branch selects it.
+default-groups = ["dev", "cpu"]
 conflicts = [[{ group = "cpu" }, { group = "cuda" }]]
 constraint-dependencies = [
     "hydra-core>=1.3.8",

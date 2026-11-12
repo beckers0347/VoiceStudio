@@ -290,6 +290,8 @@ def _load_model(stdout):
         # Optional drivers can fail during probing; CPU loading remains usable.
         accel = None
     device = accel.type if accel is not None else "cpu"  # 'cuda', 'npu', 'mps', 'xpu', 'cpu'
+    if os.environ.get("OMNIVOICE_DEVICE", "").strip().lower() == "cpu":
+        device = "cpu"  # CPU-only build / explicit CPU choice: no accelerator
     if device == "mps":
         device = "cpu"  # MOSS is untested on MPS; fall back to CPU for safety
     if device == "xpu":

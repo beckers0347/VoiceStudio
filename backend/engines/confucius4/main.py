@@ -193,6 +193,8 @@ def _load_model(stdout):
         device = device.type if device is not None else "cpu"  # 'cuda', 'npu', 'mps', 'xpu', 'cpu'
     except Exception:
         device = "cpu"  # Broken accelerator drivers must not block CPU loading.
+    if os.environ.get("OMNIVOICE_DEVICE", "").strip().lower() == "cpu":
+        device = "cpu"  # CPU-only build / explicit CPU choice: no accelerator
     if device == "mps":
         device = "cpu"  # MPS was slower than CPU in the existing validation run
     if device == "xpu":
